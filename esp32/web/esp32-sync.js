@@ -34,7 +34,7 @@ class Esp32Store {
  async read(){const result=await this.api('/api/project');if(!result||typeof result.sha!=='string'||!/^[a-f0-9]{64}$/.test(result.sha)||!result.data)throw Error('INVALID_DATA');return result;}
  accept(result){this.sha=result.sha;return result.data;}
  async load(){return this.accept(await this.read());}
- async write(data){if(!this.token)throw Error('LOGIN_REQUIRED');if(!this.sha)throw Error('NOT_LOADED');const body=JSON.stringify(data);if(new TextEncoder().encode(body).length>65536)throw Error('PROJECT_TOO_LARGE');const response=await this.api('/api/project',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':`"${this.sha}"`},body});if(typeof response.sha!=='string'||!/^[a-f0-9]{64}$/.test(response.sha))throw Error('INVALID_RESPONSE');this.sha=response.sha;return response.sha;}
+ async write(data){if(!this.token)throw Error('LOGIN_REQUIRED');if(!this.sha)throw Error('NOT_LOADED');const body=JSON.stringify(data);if(new TextEncoder().encode(body).length>262144)throw Error('PROJECT_TOO_LARGE');const response=await this.api('/api/project',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':`"${this.sha}"`},body});if(typeof response.sha!=='string'||!/^[a-f0-9]{64}$/.test(response.sha))throw Error('INVALID_RESPONSE');this.sha=response.sha;return response.sha;}
  async uploadDocument(file,date,category){if(file.size>1024*1024)throw Error('DOCUMENT_TOO_LARGE');const query=new URLSearchParams({name:file.name,date,category});const form=new FormData();form.append('file',file,file.name);return (await this.response('/api/documents?'+query,{method:'POST',body:form},120000)).json();}
  async downloadDocument(id){return (await this.response('/api/document?id='+encodeURIComponent(id),{},120000)).blob();}
 }

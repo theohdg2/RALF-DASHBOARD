@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "Accounts.h"
 #include "Documents.h"
+#include "WorkbenchValidation.h"
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WebServer.h>
@@ -24,7 +25,7 @@ WebServer server(80);
 Preferences prefs;
 Accounts accounts(server);
 Documents documents(server,stateFS,accounts);
-constexpr size_t MAX_PROJECT_BYTES = 65536;
+constexpr size_t MAX_PROJECT_BYTES = 262144;
 constexpr uint32_t RECORD_MAGIC = 0x52414C46;
 struct RecordHeader { uint32_t magic, generation, length; uint8_t digest[32]; };
 String apPassword, ssid, currentSha, activePath;
@@ -100,7 +101,7 @@ bool validProject(const String &body) {
   }
   for (JsonVariantConst t : doc["tasks"].as<JsonArrayConst>()) {
     if (!validString(t["title"],300) || !validDate(t["start"]) || !validDate(t["end"]) ||
-        strcmp(t["start"],t["end"]) > 0 || !isOneOf(t["status"], {"Prévu","En cours","Terminé","À replanifier"})) return false;
+        strcmp(t["start"],t["end"]) > 0 || !isOneOf(t["status"], {"Prévu","En cours","Bloqué","Terminé","À replanifier"})) return false;
   }
   if (!doc["profiles"].isNull()) {
     if (!doc["profiles"].is<JsonArray>() || doc["profiles"].size() > 24) return false;
@@ -143,7 +144,7 @@ bool validProject(const String &body) {
     }
   }
   for (JsonVariantConst i : doc["issues"].as<JsonArrayConst>()) if (!i["correction"].isNull() && !validString(i["correction"],48000)) return false;
-  return true;
+  return RalfWorkbench::valid(doc.as<JsonVariantConst>());
 }
 bool readRecord(const String &path, RecordHeader &header, String *payload = nullptr) {
   if (!stateFS.exists(path)) return false;
@@ -275,6 +276,8 @@ void setup() {
   server.on("/config.js",HTTP_GET,[]{asset("/config.js.gz","application/javascript; charset=utf-8");});
   server.on("/esp32-sync.js",HTTP_GET,[]{asset("/esp32-sync.js.gz","application/javascript; charset=utf-8");});
   server.on("/project-core.js",HTTP_GET,[]{asset("/project-core.js.gz","application/javascript; charset=utf-8");});
+  server.on("/bench-core.js",HTTP_GET,[]{asset("/bench-core.js.gz","application/javascript; charset=utf-8");});
+  server.on("/workbench-ui.js",HTTP_GET,[]{asset("/workbench-ui.js.gz","application/javascript; charset=utf-8");});
   server.on("/project-extras.js",HTTP_GET,[]{asset("/project-extras.js.gz","application/javascript; charset=utf-8");});
   server.on("/project-tools.js",HTTP_GET,[]{asset("/project-tools.js.gz","application/javascript; charset=utf-8");});
   server.on("/members-ui.js",HTTP_GET,[]{asset("/members-ui.js.gz","application/javascript; charset=utf-8");});

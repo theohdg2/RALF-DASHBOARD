@@ -47,3 +47,5 @@ Le dossier [esp32](esp32/README.md) contient le firmware PlatformIO et le géné
 La version ESP32 comprend aussi la connexion mémorisée, les responsables et échéances du planning, les profils associés aux essais, le journal du suivi, les notes par point de contrôle et une archive du suivi avec les documents. Voir [le guide ESP32](esp32/README.md).
 
 Les outils ESP32 proposent également Mes tâches, la recherche globale, les photos et problèmes liés aux essais, la comparaison de deux essais et les compteurs de stockage. Le bandeau inférieur et son ancien import ont été retirés.
+
+L’Atelier du projet ESP32 regroupe le matériel, les décisions, les inconnues, les versions, la prochaine séance, les campagnes, l’évolution des mesures et les plans d’expérience. Le planning inclut un Kanban et les dépendances. Les essais disposent de conditions terrain, de mesures et de critères figés, avec des liens partageables vers les fiches.

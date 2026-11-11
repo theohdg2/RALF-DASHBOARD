@@ -76,7 +76,7 @@ Exporter le JSON du projet n’exporte ni les comptes ni les documents. Les rapp
 - `state` : partition LittleFS distincte d’environ 3,9 Mo, projet et documents
 - `nvs` : comptes, empreintes de mots de passe et identifiants Wi-Fi
 
-Le projet utilise deux enregistrements alternés, avec génération et empreinte SHA-256. Au redémarrage, le firmware choisit la génération valide la plus récente. Le projet est limité à 64 Kio de JSON UTF-8 et 1 000 éléments par liste. Les conflits de modification entre deux appareils sont refusés.
+Le projet utilise deux enregistrements alternés, avec génération et empreinte SHA-256. Au redémarrage, le firmware choisit la génération valide la plus récente. Le projet est limité à 256 Kio de JSON UTF-8 et 1 000 éléments par liste. Les conflits de modification entre deux appareils sont refusés.
 
 Une mise à jour normale par `upload` puis `uploadfs` conserve ces données. Un effacement complet de flash ou une modification des partitions les supprimerait. Conserver la table fournie et exporter le suivi avant une intervention sur la mémoire.
 
@@ -133,7 +133,7 @@ Les comptes, mots de passe et paramètres Wi-Fi sont exclus. La restauration se 
 
 Le suivi est remplacé après le transfert de tous les documents manquants, avec contrôle de révision. Un échec avant cette étape retire les documents ajoutés pendant cette tentative. Une réponse réseau perdue après l’écriture déclenche une relecture. Si la carte reste inaccessible et si le résultat demeure inconnu, les documents sont conservés pour éviter leur suppression après une écriture réussie. Recharger alors le suivi et vérifier son contenu avant de recommencer.
 
-L’archive n’est pas une image de la flash. Les comptes et le réseau doivent être reconfigurés séparément sur une autre carte. Le projet conserve sa limite de 64 Kio, journal et notes inclus. Les archives peuvent atteindre environ 3,6 Mo sur le navigateur, la carte reçoit les documents un par un.
+L’archive n’est pas une image de la flash. Les comptes et le réseau doivent être reconfigurés séparément sur une autre carte. Le projet conserve sa limite de 256 Kio, journal et notes inclus. Les archives peuvent atteindre environ 3,9 Mo sur le navigateur, la carte reçoit les documents un par un.
 
 ## Identité affichée et validation des sauvegardes
 
@@ -159,3 +159,34 @@ Le bandeau de bas de page et son ancien champ d’import JSON ont été retirés
 - **Espace ESP32** affiche les octets utilisés et disponibles des deux partitions, la taille du suivi JSON, le quota des documents et les ressources de fonctionnement. Les compteurs des partitions proviennent de `/api/status`. Le quota des documents exige une connexion.
 
 Aucune corbeille n’a été ajoutée. La suppression des documents conserve son fonctionnement existant.
+
+## Atelier du projet et essais structurés
+
+Dans **Planning**, basculer entre le Kanban et le planning chronologique. Les cartes se déplacent à la souris et leur sélecteur de statut reste utilisable sur mobile. Chaque étape accepte jusqu’à 24 prérequis. L’interface refuse les cycles et les références manquantes, et refuse un passage en cours ou terminé tant que les prérequis ne sont pas terminés. Le firmware vérifie aussi la validité du graphe.
+
+L’onglet **Atelier du projet** rassemble :
+
+- **Matériel** : catégorie, disponibilité, quantité, unité, coût facultatif et notes.
+- **Décisions** : choix retenu, alternatives, justification, date et responsable.
+- **Inconnues** : hypothèse, confiance déclarée, statut, source et action de validation. Une fiche initiale maintient la couleur du troisième scotch inconnue. Le passage à Confirmée demande une source dans le formulaire.
+- **Versions** : état mécanique, électronique et logiciel du robot. Les essais conservent une copie de leur version sélectionnée.
+- **Prochaine séance** : date, lieu, objectifs, tâches, matériel, essais prévus et notes. Une exportation texte prépare la séance.
+- **Campagnes** : période, objectif, type, statut et critères de réussite. Jusqu’à cinq critères sont disponibles : erreurs absolues d’ouverture, fermeture et arrêt, durée maximale, masse minimale larguée.
+- **Évolution** : graphique et tableau des mesures réellement saisies, filtrés par campagne. Terrain et simulation sont distingués. Aucune valeur manquante n’est convertie en zéro.
+- **Plan d’expérience** : deux à huit valeurs d’un paramètre, une à dix répétitions. Les autres réglages restent figés. Chaque configuration est validée. Le plan est exportable et peut être enregistré dans le projet avec sa configuration de départ. Il prépare les passages à réaliser, sans exécuter de simulation.
+
+Chaque rubrique de fiches accepte au maximum 50 entrées. La prochaine séance accepte 50 tâches. La limite globale du projet passe à **256 Kio UTF-8**, sans changement de partitions ni de format des anciens enregistrements. Les réserves pour les documents et l’historique restent inchangées.
+
+### Assistant, conditions et mesures
+
+Depuis une campagne ou le journal des essais, l’assistant documente les vérifications avant départ : batterie, fixation, trappe, capteurs et zone. Il ouvre ensuite la fiche d’essai avec les conditions saisies. Il n’envoie aucune commande au robot.
+
+La fiche conserve la pente, la charge, la tension batterie, l’éclairage, l’état du câble et les autres conditions. Les mesures chiffrées sont les écarts de hauteur par rapport aux cibles, la durée et la masse larguée. Une case vide devient `null`, jamais zéro. Les erreurs sont signées : hauteur mesurée moins hauteur cible.
+
+Les critères et la version du robot sont copiés au premier enregistrement de l’essai. Les modifier ensuite dans la campagne ou la fiche de version ne réévalue pas rétroactivement le contexte des essais précédents. Le bilan calculé des critères apparaît séparément du résultat manuel. Avec un critère incomplet, le bilan reste À compléter, sauf si un autre critère démontre déjà une non-conformité.
+
+### Liens vers les fiches
+
+Les boutons Partager fournissent un lien vers un essai, un problème ou un document précis. Le destinataire doit accéder au même ESP32. Les documents et les photos restent soumis à la connexion. Aucun identifiant de session n’est inséré dans ces liens.
+
+Les nouvelles données sont conservées avec le suivi et incluses dans les archives. Le journal de modifications prend aussi en compte les fiches de l’atelier. Les informations non confirmées ne sont pas promues automatiquement en faits établis.
