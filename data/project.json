@@ -1,0 +1,97 @@
+{
+  "schema": "ralf-project-v1",
+  "config": {
+    "before": 100,
+    "during": 100,
+    "after": 100,
+    "start": 20,
+    "end": 10,
+    "stop": 5,
+    "drop": 30,
+    "contrast": 20,
+    "mode": "CONTRAST_OR_DISTANCE"
+  },
+  "trials": [],
+  "issues": [
+    {
+      "id": "I-01",
+      "p": "P1",
+      "title": "Séparer fermeture normale et fermeture de sécurité",
+      "desc": "58 urgences stress portent un end_cm sans validation du deuxième repère. Ajouter un événement FERMETURE_SECURITE distinct.",
+      "status": "À corriger",
+      "owner": "À attribuer"
+    },
+    {
+      "id": "I-02",
+      "p": "P1",
+      "title": "Rejouer les fermetures précoces",
+      "desc": "Seeds 22904 et 38592 : fermetures réelles à +2,2 et +2,6 cm. Mission OK ne signifie pas précision conforme.",
+      "status": "À analyser",
+      "owner": "À attribuer"
+    },
+    {
+      "id": "I-03",
+      "p": "P2",
+      "title": "Affiner l’arrêt au troisième repère",
+      "desc": "Stress : 9 511 missions terminées s’arrêtent hors du ruban final de ±0,6 cm. Comparer les modes à paramètres constants.",
+      "status": "À analyser",
+      "owner": "À attribuer"
+    },
+    {
+      "id": "I-04",
+      "p": "P2",
+      "title": "Mesurer vitesse et freinage sur le robot",
+      "desc": "Le modèle suppose 2 cm/s à 100 % PWM et un arrêt instantané. Mesurer chaque phase, avec charge et pente.",
+      "status": "À tester",
+      "owner": "À attribuer"
+    },
+    {
+      "id": "I-05",
+      "p": "P2",
+      "title": "Confirmer le contraste du troisième scotch",
+      "desc": "Couleur inconnue. Le ruban clair à 90 % est une hypothèse du simulateur. Tester clair, sombre et absence de repère.",
+      "status": "À confirmer",
+      "owner": "À attribuer"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Réalisation et intégration",
+      "start": "2026-11-09",
+      "end": "2026-11-26",
+      "status": "En cours"
+    },
+    {
+      "title": "PC3",
+      "start": "2026-11-27",
+      "end": "2026-11-27",
+      "status": "Prévu"
+    },
+    {
+      "title": "Finalisation du robot",
+      "start": "2026-11-28",
+      "end": "2026-11-30",
+      "status": "Prévu"
+    },
+    {
+      "title": "Essais, corrections et rapport",
+      "start": "2026-12-01",
+      "end": "2026-12-14",
+      "status": "Prévu"
+    },
+    {
+      "title": "Dépôt final",
+      "start": "2026-12-15",
+      "end": "2026-12-15",
+      "status": "Prévu"
+    },
+    {
+      "title": "Compétition",
+      "start": "2026-12-17",
+      "end": "2026-12-17",
+      "status": "Prévu"
+    }
+  ],
+  "revision": 1,
+  "updatedAt": "2026-11-11T14:33:21.675Z"
+}
