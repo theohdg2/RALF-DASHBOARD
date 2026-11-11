@@ -134,3 +134,15 @@ Les comptes, mots de passe et paramètres Wi-Fi sont exclus. La restauration se 
 Le suivi est remplacé après le transfert de tous les documents manquants, avec contrôle de révision. Un échec avant cette étape retire les documents ajoutés pendant cette tentative. Une réponse réseau perdue après l’écriture déclenche une relecture. Si la carte reste inaccessible et si le résultat demeure inconnu, les documents sont conservés pour éviter leur suppression après une écriture réussie. Recharger alors le suivi et vérifier son contenu avant de recommencer.
 
 L’archive n’est pas une image de la flash. Les comptes et le réseau doivent être reconfigurés séparément sur une autre carte. Le projet conserve sa limite de 64 Kio, journal et notes inclus. Les archives peuvent atteindre environ 3,6 Mo sur le navigateur, la carte reçoit les documents un par un.
+
+## Identité affichée et validation des sauvegardes
+
+Le bas de la barre latérale affiche le nom du compte connecté. L’avatar utilise la première lettre du prénom et du début du nom, par exemple « Théo Van de Walle » donne TV. Un nom composé d’un seul mot donne une seule initiale. Sans connexion, le libellé est « Visiteur ».
+
+La validation des tableaux et objets imbriqués dans les variantes JSON en lecture seule utilise les types ArduinoJson `JsonArrayConst` et `JsonObjectConst`. Cela corrige le refus des sauvegardes avec historique et des notes de point de contrôle. Le test suivant compile directement les fonctions de validation du firmware, puis leur soumet des modifications produites par le navigateur :
+
+```powershell
+python esp32/tests/project_validation_test.py
+```
+
+Lancer cette commande depuis la racine du dépôt après une compilation PlatformIO pour disposer des en-têtes ArduinoJson. Le test vérifie le projet existant, les paramètres avec historique, les profils, les responsables, les essais et les notes, ainsi que le rejet des données invalides.

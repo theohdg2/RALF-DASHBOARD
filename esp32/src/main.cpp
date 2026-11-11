@@ -112,7 +112,7 @@ bool validProject(const String &body) {
     for (JsonPairConst p : doc["checkpoints"].as<JsonObjectConst>()) {
       const String key=p.key().c_str();
       if (key!="PC1" && key!="PC2" && key!="PC3" && key!="Rapport") return false;
-      if (!p.value().is<JsonObject>()) return false;
+      if (!p.value().is<JsonObjectConst>()) return false;
       for (const char *field : {"summary","decisions","next"})
         if (!p.value()[field].isNull() && !validString(p.value()[field],16000)) return false;
     }
@@ -120,7 +120,7 @@ bool validProject(const String &body) {
   if (!doc["history"].isNull()) {
     if (!doc["history"].is<JsonArray>() || doc["history"].size()>80) return false;
     for (JsonVariantConst e : doc["history"].as<JsonArrayConst>()) {
-      if (!validString(e["id"],100) || !validString(e["at"],100) || !validString(e["actor"]["name"],300) || !validString(e["actor"]["email"],300) || !e["changes"].is<JsonArray>() || e["changes"].size()>20) return false;
+      if (!validString(e["id"],100) || !validString(e["at"],100) || !validString(e["actor"]["name"],300) || !validString(e["actor"]["email"],300) || !e["changes"].is<JsonArrayConst>() || e["changes"].size()>20) return false;
       if (!e["count"].isNull() && (!e["count"].is<unsigned>() || e["count"].as<unsigned>()>100000)) return false;
       for (JsonVariantConst c : e["changes"].as<JsonArrayConst>()) if (!validString(c["path"],300)) return false;
     }
