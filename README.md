@@ -4,13 +4,13 @@
 
 Le site est statique. Les données partagées sont enregistrées dans `data/project.json` avec l’API GitHub Contents. Chaque enregistrement produit un commit. Le site lit la dernière version sur GitHub, indépendamment des délais de publication GitHub Pages.
 
-La consultation est publique. Pour modifier, un membre autorisé saisit son propre jeton personnel GitHub à accès fin dans « Connexion pour modifier ». Limiter le jeton au dépôt RALF avec `Contents: Read and write`. Le membre doit aussi avoir des droits d’écriture sur le dépôt. Aucun jeton ne doit être placé dans le code, config.js, les données, une URL ou un export. Le site garde le jeton en mémoire, jamais dans localStorage. Fermer ou recharger la page termine la session d’édition.
+La consultation est publique. Pour modifier, un membre autorisé saisit son propre jeton personnel GitHub à accès fin dans « Connexion pour modifier ». Limiter le jeton au dépôt RALF-DASHBOARD avec `Contents: Read and write`. Le membre doit aussi avoir des droits d’écriture sur le dépôt. Aucun jeton ne doit être placé dans le code, config.js, les données, une URL ou un export. Le site garde le jeton en mémoire, jamais dans localStorage. Fermer ou recharger la page termine la session d’édition.
 
 ## Hébergement
 
-1. Déposer le contenu de cette archive à la racine d’une branche dédiée, par exemple `ralf-dashboard`. Conserver `index.html`, `app.js`, `style.css`, `sync.js`, `config.js`, `.nojekyll` et `data/project.json`.
-2. Dans `config.js`, renseigner le propriétaire, le dépôt, la branche de données et le chemin JSON. La configuration actuelle vise `theohdg2/RALF`, branche `ralf-dashboard`, chemin `data/project.json`.
-3. Sur GitHub : Settings > Pages > Build and deployment > Deploy from a branch. Sélectionner la branche `ralf-dashboard` et le dossier `/ (root)`. Enregistrer.
+1. Déposer le contenu de cette archive à la racine d’une branche dédiée, par exemple `main`. Conserver `index.html`, `app.js`, `style.css`, `sync.js`, `config.js`, `.nojekyll` et `data/project.json`.
+2. Dans `config.js`, renseigner le propriétaire, le dépôt, la branche de données et le chemin JSON. La configuration actuelle vise `theohdg2/RALF-DASHBOARD`, branche `main`, chemin `data/project.json`.
+3. Sur GitHub : Settings > Pages > Build and deployment > Deploy from a branch. Sélectionner la branche `main` et le dossier `/ (root)`. Enregistrer.
 4. Ouvrir l’adresse fournie par GitHub Pages. La même interface fonctionne aussi sur un autre hébergeur statique.
 5. Vérifier le voyant « Données partagées sur GitHub ». Un refus ou un fichier absent reste affiché comme une erreur, sans prétendre avoir sauvegardé.
 6. Pour modifier, saisir le jeton dans la fenêtre de connexion, enregistrer un essai puis vérifier le nouveau commit de `data/project.json`. Recharger le site depuis un autre navigateur pour vérifier le résultat.
