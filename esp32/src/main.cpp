@@ -267,7 +267,7 @@ void setup() {
   server.on("/project-tools.js",HTTP_GET,[]{asset("/project-tools.js.gz","application/javascript; charset=utf-8");});
   server.on("/members-ui.js",HTTP_GET,[]{asset("/members-ui.js.gz","application/javascript; charset=utf-8");});
   server.on("/style.css",HTTP_GET,[]{asset("/style.css.gz","text/css; charset=utf-8");});
-  server.on("/logo-ralf.jpg",HTTP_GET,[]{asset("/logo-ralf.jpg","image/jpeg");});
+  server.on("/logo-ralf.png",HTTP_GET,[]{asset("/logo-ralf.png","image/png");});
   server.on("/favicon.ico",HTTP_GET,[]{server.send(204,"image/x-icon","");});
   server.onNotFound([]{Serial.printf("HTTP route missing: method=%d path=%s\n",(int)server.method(),server.uri().c_str());reply(404,"NOT_FOUND");});
   server.begin();
