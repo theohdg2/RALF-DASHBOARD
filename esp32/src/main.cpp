@@ -193,7 +193,7 @@ void asset(const char *path, const char *type) {
   File file = LittleFS.open(path, "r");
   server.sendHeader("Cache-Control", "no-cache");
   server.sendHeader("X-Content-Type-Options", "nosniff");
-  if (String(path).endsWith(".gz")) server.sendHeader("Content-Encoding", "gzip");
+  // streamFile() adds Content-Encoding: gzip for .gz files. Do not add it twice.
   server.streamFile(file, type); file.close();
 }
 void setup() {
