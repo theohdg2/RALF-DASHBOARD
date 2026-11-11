@@ -38,3 +38,8 @@ Tests : Unicode, sauvegarde sur le transport GitHub, lecture par un second clien
 ## Données du projet
 
 Les hauteurs 20 / 10 / 5 cm sont provisoires. La couleur du troisième scotch reste inconnue. Les campagnes historiques ne sont pas recalculées par les réglages du tableau de bord. Les données du dépôt public sont accessibles à tous.
+
+
+## Variante ESP32-S3 N16R8
+
+Le dossier [esp32](esp32/README.md) contient le firmware PlatformIO et le générateur du site local. Cette variante fonctionne sans Internet ni jeton GitHub, avec sauvegarde dans la mémoire de l’ESP32. Voir le guide pour le chargement USB, le Wi-Fi et la clé d’édition locale.
