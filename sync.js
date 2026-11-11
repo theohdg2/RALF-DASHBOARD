@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 class GithubStore {
- constructor(config,request=fetch){this.config=config;this.request=request;this.sha=null;this.token='';}
+ constructor(config,request=fetch){this.config=config;this.request=request.bind(globalThis);this.sha=null;this.token='';}
  setToken(token){this.token=token.trim();}
  endpoint(){const c=this.config;return `https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}/contents/${c.path.split('/').map(encodeURIComponent).join('/')}`;}
  async api(url,options={}){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);try{const response=await this.request(url,{...options,signal:controller.signal,cache:'no-store',headers:{Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(this.token?{Authorization:`Bearer ${this.token}`}:{ }),...options.headers}});if(!response.ok){const error=new Error(response.status===409||response.status===422?'CONFLICT':response.status===401||response.status===403?'AUTH':response.status===404?'NOT_FOUND':`HTTP_${response.status}`);error.status=response.status;throw error;}return await response.json();}finally{clearTimeout(timer);}}

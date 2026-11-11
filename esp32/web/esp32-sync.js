@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 class Esp32Store {
- constructor(config={},request=fetch){this.config=config;this.request=request;this.sha=null;this.token='';}
+ constructor(config={},request=fetch){this.config=config;this.request=request.bind(globalThis);this.sha=null;this.token='';}
  setToken(token){this.token=token.trim();}
  async api(path,options={}){
   if(!/^\/api\/[a-z]+$/.test(path))throw Error('INVALID_ENDPOINT');
