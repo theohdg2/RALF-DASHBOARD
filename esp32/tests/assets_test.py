@@ -11,6 +11,8 @@ class AssetsTest(unittest.TestCase):
     def setUpClass(cls): cls.assets=builder.build()
     def test_no_external_dependencies(self):
         self.assertNotIn('@import',self.assets['style.css'])
+        self.assertTrue(self.assets['style.css'].lstrip().startswith(':root{'))
+        self.assertNotIn('fonts.googleapis.com',self.assets['style.css'])
         self.assertNotIn('api.github.com',self.assets['app.js'])
         self.assertNotIn('githubToken',self.assets['app.js'])
         self.assertNotIn('crypto.randomUUID',self.assets['app.js'])

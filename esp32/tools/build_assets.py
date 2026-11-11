@@ -19,7 +19,7 @@ def build():
  <div class="form-actions"><button onclick="retrySync()">Réessayer la sauvegarde</button><button onclick="exportProject()">Exporter le brouillon JSON</button><button onclick="reloadShared()">Recharger la version partagée</button></div>
  ${recoveredDraft?'<div class="notice">Brouillon récupérable : <button onclick="downloadRecovered()">Exporter ce brouillon</button></div>':''}
  <p class="muted section-gap">Capacité du suivi : 64 Kio. Les archives CSV et JSON se téléchargent sur ton appareil.</p>`);
- $('#connectForm').onsubmit=async e=>{e.preventDefault();const key=$('#editorKey').value;$('#editorKey').value='';remote.setToken(key);try{await remote.authenticate();const loaded=await remote.read();if(!validateProject(loaded.data))throw Error('INVALID_DATA');if(!dirty){state=remote.accept(loaded);remoteReady=true;remoteError='';lastSaved=state.updatedAt;render();}$('#modal').close();updateSyncUI();toast('Édition locale activée');}catch(error){remote.setToken('');updateSyncUI();toast(error.status===401?'Clé d’édition incorrecte. Consulte le moniteur série.':error.message==='STORAGE_UNAVAILABLE'?'Mémoire du projet indisponible. Consulte le moniteur série.':'Connexion ESP32 impossible. Vérifie le Wi-Fi et le serveur.');}};
+ $('#connectForm').onsubmit=async e=>{e.preventDefault();const key=$('#editorKey').value;$('#editorKey').value='';remote.setToken(key);try{await remote.authenticate();const loaded=await remote.read();if(!validateProject(loaded.data))throw Error('INVALID_DATA');if(!dirty){state=remote.accept(loaded);remoteReady=true;remoteError='';lastSaved=state.updatedAt;render();}$('#modal').close();updateSyncUI();toast('Édition locale activée');}catch(error){remote.setToken('');updateSyncUI();toast(error.status===401?'Clé d’édition refusée (HTTP 401). Consulte le moniteur série.':error.status===403?'Origine de la page refusée (HTTP 403). Ouvre le site directement depuis l’adresse de l’ESP32.':error.status===404?'Route API absente (HTTP 404). Recharge le firmware et les fichiers du site de la même version.':error.message==='STORAGE_UNAVAILABLE'?'Mémoire du projet indisponible (HTTP 503). Consulte le moniteur série.':error.message==='INVALID_DATA'?'Le projet reçu est invalide. Ouvre /api/project pour vérifier la réponse.':error.message==='INVALID_RESPONSE'?'Réponse de session inattendue. Recharge le firmware et les fichiers web.':error.name==='SyntaxError'?'La réponse de l’ESP32 n’est pas un JSON valide. Ouvre /api/project.':error.name==='AbortError'?'Délai de connexion dépassé. Réessaie après quelques secondes.':'Requête réseau impossible. Vérifie la connexion au Wi-Fi de l’ESP32.');}};
 }
 '''
     app = app[:start] + modal + app[end:]
@@ -36,7 +36,7 @@ def build():
     html = re.sub(r'(src|href)="(config.js|sync.js|app.js|style.css)(?:\?[^\"]*)?"', lambda m:f'{m[1]}="{m[2]}"', html)
     html = html.replace('src="sync.js"','src="esp32-sync.js"').replace('Connexion GitHub','Connexion ESP32').replace('Chargement GitHub','Chargement ESP32').replace('Consultation publique','Hébergement local ESP32')
     css = (ROOT/'style.css').read_text(encoding='utf-8')
-    css = re.sub(r"@import\s+url\([^;]+;\s*", '', css)
+    css = re.sub(r"@import\s+url\([^)]*\)\s*;\s*", '', css)
     config = "window.RALF_REMOTE={owner:'RALF',repo:'ESP32',branch:'mémoire interne',path:'projet local'};\n"
     assets = {'index.html':html,'app.js':app,'style.css':css,'config.js':config,'esp32-sync.js':(ESP/'web/esp32-sync.js').read_text(encoding='utf-8')}
     output=ESP/'data';output.mkdir(exist_ok=True)

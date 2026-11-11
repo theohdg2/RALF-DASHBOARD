@@ -13,7 +13,7 @@ class Esp32Store {
    return await response.json();
   }finally{clearTimeout(timer);}
  }
- async authenticate(){if(!this.token)throw Error('AUTH');return this.api('/api/session',{method:'POST'});}
+ async authenticate(){if(!this.token)throw Error('AUTH');const result=await this.api('/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(result.authenticated!==true)throw Error('INVALID_RESPONSE');return result;}
  async read(){const result=await this.api('/api/project');if(!result||typeof result.sha!=='string'||!/^[a-f0-9]{64}$/.test(result.sha)||!result.data)throw Error('INVALID_DATA');return result;}
  accept(result){this.sha=result.sha;return result.data;}
  async load(){return this.accept(await this.read());}

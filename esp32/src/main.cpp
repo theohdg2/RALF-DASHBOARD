@@ -51,8 +51,8 @@ void reply(int code, const char *error) {
 }
 bool authorized() {
   const String origin = server.header("Origin");
-  if (origin.length() && origin != "http://" + server.hostHeader()) { reply(403, "ORIGIN"); return false; }
-  if (!constantEqual(server.header("Authorization"), "Bearer " + editorKey)) { reply(401, "AUTH"); return false; }
+  if (origin.length() && origin != "http://" + server.hostHeader()) { Serial.println("API 403: page origin does not match this ESP32."); reply(403, "ORIGIN"); return false; }
+  if (!constantEqual(server.header("Authorization"), "Bearer " + editorKey)) { Serial.println("API 401: editor key rejected."); reply(401, "AUTH"); return false; }
   return true;
 }
 bool validString(JsonVariantConst value, size_t maxLength = 20000) {
@@ -233,7 +233,8 @@ void setup() {
   server.on("/config.js",HTTP_GET,[]{asset("/config.js.gz","application/javascript; charset=utf-8");});
   server.on("/esp32-sync.js",HTTP_GET,[]{asset("/esp32-sync.js.gz","application/javascript; charset=utf-8");});
   server.on("/style.css",HTTP_GET,[]{asset("/style.css.gz","text/css; charset=utf-8");});
-  server.onNotFound([]{reply(404,"NOT_FOUND");});
+  server.on("/favicon.ico",HTTP_GET,[]{server.send(204,"image/x-icon","");});
+  server.onNotFound([]{Serial.printf("HTTP route missing: method=%d path=%s\n",(int)server.method(),server.uri().c_str());reply(404,"NOT_FOUND");});
   server.begin();
   Serial.println(ready ? "RALF dashboard ready." : "Storage unavailable. See messages above.");
 }
