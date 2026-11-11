@@ -54,7 +54,7 @@ Chaque mot de passe provisoire est généré par l’ESP32 et affiché une fois 
 
 Les membres connectés modifient le projet et déposent ou téléchargent les documents. Les visiteurs non connectés consultent le tableau de bord, sans modifier les données et sans accéder aux documents. Le serveur applique les droits, même pour une requête directe à l’API.
 
-Les mots de passe sont enregistrés dans NVS sous forme PBKDF2-HMAC-SHA256, 60 000 itérations, avec un sel aléatoire individuel. Les mots de passe en clair ne sont pas conservés. Les sessions aléatoires restent en mémoire, expirent après huit heures et disparaissent au redémarrage. Le navigateur ne conserve pas le jeton de session après le rechargement. Cinq échecs de connexion déclenchent une pause de 30 secondes.
+Les mots de passe sont enregistrés dans NVS sous forme PBKDF2-HMAC-SHA256, 60 000 itérations, avec un sel aléatoire individuel. Les mots de passe en clair ne sont pas conservés. Les sessions aléatoires restent en mémoire, expirent après huit heures et disparaissent au redémarrage. Le navigateur conserve le jeton de session dans le stockage de l’onglet pour retrouver la connexion après un rechargement. L’option « Rester connecté » utilise le stockage local et conserve la connexion après fermeture du navigateur, dans la limite des huit heures depuis la connexion. Le mot de passe et les droits du compte ne sont jamais mémorisés dans ce stockage. Chaque restauration vérifie le compte auprès de l’ESP32. Le redémarrage de la carte, la déconnexion, la désactivation du compte ou une réinitialisation de son mot de passe invalident la session. Cinq échecs de connexion déclenchent une pause de 30 secondes.
 
 ## Planning
 
