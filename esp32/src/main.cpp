@@ -102,6 +102,36 @@ bool validProject(const String &body) {
     if (!validString(t["title"],300) || !validDate(t["start"]) || !validDate(t["end"]) ||
         strcmp(t["start"],t["end"]) > 0 || !isOneOf(t["status"], {"Prévu","En cours","Terminé","À replanifier"})) return false;
   }
+  if (!doc["profiles"].isNull()) {
+    if (!doc["profiles"].is<JsonArray>() || doc["profiles"].size() > 24) return false;
+    for (JsonVariantConst p : doc["profiles"].as<JsonArrayConst>())
+      if (!validString(p["id"],100) || !validString(p["name"],100) || !validConfig(p["config"])) return false;
+  }
+  if (!doc["checkpoints"].isNull()) {
+    if (!doc["checkpoints"].is<JsonObject>()) return false;
+    for (JsonPairConst p : doc["checkpoints"].as<JsonObjectConst>()) {
+      const String key=p.key().c_str();
+      if (key!="PC1" && key!="PC2" && key!="PC3" && key!="Rapport") return false;
+      if (!p.value().is<JsonObject>()) return false;
+      for (const char *field : {"summary","decisions","next"})
+        if (!p.value()[field].isNull() && !validString(p.value()[field],16000)) return false;
+    }
+  }
+  if (!doc["history"].isNull()) {
+    if (!doc["history"].is<JsonArray>() || doc["history"].size()>80) return false;
+    for (JsonVariantConst e : doc["history"].as<JsonArrayConst>()) {
+      if (!validString(e["id"],100) || !validString(e["at"],100) || !validString(e["actor"]["name"],300) || !validString(e["actor"]["email"],300) || !e["changes"].is<JsonArray>() || e["changes"].size()>20) return false;
+      if (!e["count"].isNull() && (!e["count"].is<unsigned>() || e["count"].as<unsigned>()>100000)) return false;
+      for (JsonVariantConst c : e["changes"].as<JsonArrayConst>()) if (!validString(c["path"],300)) return false;
+    }
+  }
+  for (JsonVariantConst t : doc["tasks"].as<JsonArrayConst>()) {
+    if ((!t["ownerId"].isNull() && !validString(t["ownerId"],100)) || (!t["owner"].isNull() && !validString(t["owner"],300))) return false;
+  }
+  for (JsonVariantConst t : doc["trials"].as<JsonArrayConst>()) {
+    if ((!t["profileId"].isNull() && !validString(t["profileId"],100)) || (!t["profileName"].isNull() && !validString(t["profileName"],100))) return false;
+    if (!t["checkpoint"].isNull() && !isOneOf(t["checkpoint"],{"PC1","PC2","PC3","Rapport","Autre"})) return false;
+  }
   return true;
 }
 bool readRecord(const String &path, RecordHeader &header, String *payload = nullptr) {
@@ -233,6 +263,8 @@ void setup() {
   server.on("/app.js",HTTP_GET,[]{asset("/app.js.gz","application/javascript; charset=utf-8");});
   server.on("/config.js",HTTP_GET,[]{asset("/config.js.gz","application/javascript; charset=utf-8");});
   server.on("/esp32-sync.js",HTTP_GET,[]{asset("/esp32-sync.js.gz","application/javascript; charset=utf-8");});
+  server.on("/project-core.js",HTTP_GET,[]{asset("/project-core.js.gz","application/javascript; charset=utf-8");});
+  server.on("/project-tools.js",HTTP_GET,[]{asset("/project-tools.js.gz","application/javascript; charset=utf-8");});
   server.on("/members-ui.js",HTTP_GET,[]{asset("/members-ui.js.gz","application/javascript; charset=utf-8");});
   server.on("/style.css",HTTP_GET,[]{asset("/style.css.gz","text/css; charset=utf-8");});
   server.on("/logo-ralf.jpg",HTTP_GET,[]{asset("/logo-ralf.jpg","image/jpeg");});

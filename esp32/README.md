@@ -54,7 +54,7 @@ Chaque mot de passe provisoire est généré par l’ESP32 et affiché une fois 
 
 Les membres connectés modifient le projet et déposent ou téléchargent les documents. Les visiteurs non connectés consultent le tableau de bord, sans modifier les données et sans accéder aux documents. Le serveur applique les droits, même pour une requête directe à l’API.
 
-Les mots de passe sont enregistrés dans NVS sous forme PBKDF2-HMAC-SHA256, 60 000 itérations, avec un sel aléatoire individuel. Les mots de passe en clair ne sont pas conservés. Les sessions aléatoires restent en mémoire, expirent après huit heures et disparaissent au redémarrage. Le navigateur conserve le jeton de session dans le stockage de l’onglet pour retrouver la connexion après un rechargement. L’option « Rester connecté » utilise le stockage local et conserve la connexion après fermeture du navigateur, dans la limite des huit heures depuis la connexion. Le mot de passe et les droits du compte ne sont jamais mémorisés dans ce stockage. Chaque restauration vérifie le compte auprès de l’ESP32. Le redémarrage de la carte, la déconnexion, la désactivation du compte ou une réinitialisation de son mot de passe invalident la session. Cinq échecs de connexion déclenchent une pause de 30 secondes.
+Les mots de passe sont enregistrés dans NVS sous forme PBKDF2-HMAC-SHA256, 60 000 itérations, avec un sel aléatoire individuel. Les mots de passe en clair ne sont pas conservés. Les sessions aléatoires restent en mémoire, expirent après huit heures et disparaissent au redémarrage. La connexion est mémorisée automatiquement dans le stockage local du navigateur, sans case à cocher. Elle reste valable huit heures depuis la connexion, même après rechargement ou fermeture du navigateur. Le mot de passe et les droits du compte ne sont jamais mémorisés dans ce stockage. Chaque restauration vérifie le compte auprès de l’ESP32. Le redémarrage de la carte, la déconnexion, la désactivation du compte ou une réinitialisation de son mot de passe invalident la session. Cinq échecs de connexion déclenchent une pause de 30 secondes.
 
 ## Planning
 
@@ -106,3 +106,31 @@ Les tests natifs portent sur les rôles, le dernier administrateur actif, l’ex
 Principales routes : `/api/login`, `/api/logout`, `/api/me`, `/api/password`, `/api/profile`, `/api/users`, `/api/reset-password`, `/api/project`, `/api/documents`, `/api/document`, `/api/status`. Les données de compte et les documents exigent une session. Les opérations admin exigent le rôle administrateur.
 
 Ce firmware héberge le tableau de bord. Il n’envoie pas d’ordres moteur ou servo au Pico. Les paramètres restent des profils de projet. Les valeurs provisoires et la couleur inconnue du troisième scotch sont conservées.
+
+## Outils de suivi
+
+### Planning et membres
+
+Le planning affiche les étapes dans l’ordre chronologique, avec un responsable sélectionné dans les comptes actifs et une échéance. Le libellé « En retard » correspond à une échéance antérieure au jour à Bruxelles et à une étape non terminée. Le statut reste manuel. La route authentifiée `/api/team` fournit les membres actifs pour cette attribution.
+
+### Profils et essais
+
+Depuis Paramètres du robot, enregistrer les valeurs courantes puis utiliser « Nommer les réglages courants ». Jusqu’à 24 profils sont conservés. Lors d’un nouvel essai, choisir un profil et un point de contrôle. Les valeurs sont copiées dans l’essai. Un changement ultérieur des réglages ne modifie aucun essai existant. Le tableau distingue les essais terrain et les simulations saisies. Les campagnes historiques ne sont pas recalculées.
+
+### Historique
+
+Le journal suit les modifications du projet enregistrées par cette interface : configuration, étapes, problèmes, essais, profils et notes de livrables. Chaque opération indique le membre connecté, la date du navigateur et les valeurs avant/après. Il conserve au maximum 80 opérations, avec une réserve de 18 Ko, vingt champs par opération et des extraits pour les textes longs. Ce journal de travail est inclus dans le JSON partagé, il n’est pas un journal de sécurité inviolable. Les modifications des comptes et les transferts de documents ne figurent pas dans ce journal. Il commence avec les prochaines modifications, sans reconstituer le passé.
+
+### Rapports et points de contrôle
+
+Les rubriques PC1, PC2, PC3 et Rapport conservent leurs notes d’avancement, décisions et prochaines actions. Affecter chaque essai à son livrable pour le retrouver dans la synthèse. Le filtre de dates porte sur ces essais. Les problèmes et le planning décrivent l’état actuel du suivi. Charger les documents associés avant l’export Markdown ou l’impression PDF. Les informations non confirmées restent provisoires, notamment la couleur du troisième scotch.
+
+### Archive complète et restauration
+
+L’onglet Sauvegarde télécharge une archive JSON contenant le suivi, les profils, les notes, le journal disponible et le contenu binaire de chaque document, encodé en base64. Chaque fichier porte un contrôle CRC32 destiné à repérer une altération accidentelle. Ce contrôle n’authentifie pas l’auteur d’une archive.
+
+Les comptes, mots de passe et paramètres Wi-Fi sont exclus. La restauration se fait depuis un compte administrateur existant. Elle vérifie le format, les tailles, les dates et les contrôles avant transfert, réutilise les documents identiques et ajoute les documents manquants. Les documents déjà présents sont conservés. Le quota de 24 documents et 2,5 Mio s’applique au total après restauration.
+
+Le suivi est remplacé après le transfert de tous les documents manquants, avec contrôle de révision. Un échec avant cette étape retire les documents ajoutés pendant cette tentative. Une réponse réseau perdue après l’écriture déclenche une relecture. Si la carte reste inaccessible et si le résultat demeure inconnu, les documents sont conservés pour éviter leur suppression après une écriture réussie. Recharger alors le suivi et vérifier son contenu avant de recommencer.
+
+L’archive n’est pas une image de la flash. Les comptes et le réseau doivent être reconfigurés séparément sur une autre carte. Le projet conserve sa limite de 64 Kio, journal et notes inclus. Les archives peuvent atteindre environ 3,6 Mo sur le navigateur, la carte reçoit les documents un par un.

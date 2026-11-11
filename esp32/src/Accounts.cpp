@@ -96,6 +96,7 @@ void Accounts::profile(){
 }
 void Accounts::physicalAdminReset(){if(!available)return;for(size_t i=0;i<users.size();i++)if(users[i].active&&users[i].role=="admin"){auto next=users;String pass=randomHex(12);next[i].salt=randomHex(16);next[i].hash=passwordHash(pass,next[i].salt);next[i].mustChange=true;if(next[i].hash.length()!=64||!persist(next))return;users=next;invalidate(users[i].id);Serial.printf("ADMIN RESET EMAIL: %s\nTEMPORARY PASSWORD: %s\n",users[i].email.c_str(),pass.c_str());return;}}
 void Accounts::routes(){
+ web.on("/api/team",HTTP_GET,[this]{if(require()<0)return;JsonDocument d;JsonArray a=d["users"].to<JsonArray>();for(auto&u:users)if(u.active){JsonObject o=a.add<JsonObject>();o["id"]=u.id;o["name"]=u.name;o["email"]=u.email;}String body;serializeJson(d,body);web.sendHeader("Cache-Control","no-store");web.send(200,"application/json",body);});
  web.on("/api/login",HTTP_POST,[this]{login();});web.on("/api/logout",HTTP_POST,[this]{logout();});web.on("/api/me",HTTP_GET,[this]{int i=require(false,true);if(i<0)return;JsonDocument d;publicUser(d["user"].to<JsonObject>(),users[i]);String body;serializeJson(d,body);web.sendHeader("Cache-Control","no-store");web.send(200,"application/json",body);});
  web.on("/api/users",HTTP_GET,[this]{list();});web.on("/api/users",HTTP_POST,[this]{create();});web.on("/api/users",HTTP_PUT,[this]{update();});web.on("/api/reset-password",HTTP_POST,[this]{reset();});web.on("/api/password",HTTP_POST,[this]{password();});web.on("/api/profile",HTTP_POST,[this]{profile();});
 }
