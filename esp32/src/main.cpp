@@ -132,6 +132,17 @@ bool validProject(const String &body) {
     if ((!t["profileId"].isNull() && !validString(t["profileId"],100)) || (!t["profileName"].isNull() && !validString(t["profileName"],100))) return false;
     if (!t["checkpoint"].isNull() && !isOneOf(t["checkpoint"],{"PC1","PC2","PC3","Rapport","Autre"})) return false;
   }
+  for (JsonVariantConst t : doc["trials"].as<JsonArrayConst>()) {
+    if (!t["photos"].isNull()) {
+      if (!t["photos"].is<JsonArrayConst>() || t["photos"].size()>6) return false;
+      for (JsonVariantConst id : t["photos"].as<JsonArrayConst>()) if (!id.is<const char *>() || !RalfPolicy::validDocumentId(id.as<const char *>())) return false;
+    }
+    if (!t["issueIds"].isNull()) {
+      if (!t["issueIds"].is<JsonArrayConst>() || t["issueIds"].size()>24) return false;
+      for (JsonVariantConst id : t["issueIds"].as<JsonArrayConst>()) if (!validString(id,100)) return false;
+    }
+  }
+  for (JsonVariantConst i : doc["issues"].as<JsonArrayConst>()) if (!i["correction"].isNull() && !validString(i["correction"],48000)) return false;
   return true;
 }
 bool readRecord(const String &path, RecordHeader &header, String *payload = nullptr) {
@@ -257,13 +268,14 @@ void setup() {
   server.on("/api/project",HTTP_PUT,putProject);
   accounts.routes();
   documents.routes();
-  server.on("/api/status",HTTP_GET,[]{JsonDocument d;d["storageReady"]=ready;d["generation"]=currentGeneration;d["maxProjectBytes"]=MAX_PROJECT_BYTES;d["freeHeap"]=ESP.getFreeHeap();d["psramBytes"]=ESP.getPsramSize();String body;serializeJson(d,body);server.sendHeader("Cache-Control","no-store");server.send(200,"application/json",body);});
+  server.on("/api/status",HTTP_GET,[]{JsonDocument d;d["storageReady"]=ready;d["generation"]=currentGeneration;d["maxProjectBytes"]=MAX_PROJECT_BYTES;d["stateTotalBytes"]=stateFS.totalBytes();d["stateUsedBytes"]=stateFS.usedBytes();d["webTotalBytes"]=LittleFS.totalBytes();d["webUsedBytes"]=LittleFS.usedBytes();d["freeHeap"]=ESP.getFreeHeap();d["psramBytes"]=ESP.getPsramSize();String body;serializeJson(d,body);server.sendHeader("Cache-Control","no-store");server.send(200,"application/json",body);});
   server.on("/",HTTP_GET,[]{asset("/index.html.gz","text/html; charset=utf-8");});
   server.on("/index.html",HTTP_GET,[]{asset("/index.html.gz","text/html; charset=utf-8");});
   server.on("/app.js",HTTP_GET,[]{asset("/app.js.gz","application/javascript; charset=utf-8");});
   server.on("/config.js",HTTP_GET,[]{asset("/config.js.gz","application/javascript; charset=utf-8");});
   server.on("/esp32-sync.js",HTTP_GET,[]{asset("/esp32-sync.js.gz","application/javascript; charset=utf-8");});
   server.on("/project-core.js",HTTP_GET,[]{asset("/project-core.js.gz","application/javascript; charset=utf-8");});
+  server.on("/project-extras.js",HTTP_GET,[]{asset("/project-extras.js.gz","application/javascript; charset=utf-8");});
   server.on("/project-tools.js",HTTP_GET,[]{asset("/project-tools.js.gz","application/javascript; charset=utf-8");});
   server.on("/members-ui.js",HTTP_GET,[]{asset("/members-ui.js.gz","application/javascript; charset=utf-8");});
   server.on("/style.css",HTTP_GET,[]{asset("/style.css.gz","text/css; charset=utf-8");});

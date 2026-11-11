@@ -28,6 +28,12 @@ class AssetsTest(unittest.TestCase):
         self.assertLess(html.index('src="members-ui.js"'),html.index('src="app.js"'))
         self.assertIn('accountLoginModal()',self.assets['app.js'])
         self.assertNotIn('remote.authenticate()',self.assets['app.js'])
+    def test_bottom_banner_and_old_import_are_removed(self):
+        self.assertNotIn('<footer', self.assets['index.html'])
+        self.assertNotIn('importFile', self.assets['index.html'])
+        self.assertNotIn('importFile', self.assets['app.js'])
+        self.assertNotIn('Importer JSON', self.assets['app.js'])
+
     def test_gzip_roundtrip(self):
         for name,source in self.assets.items():self.assertEqual(gzip.decompress((ESP/'data'/(name+'.gz')).read_bytes()).decode(),source)
     def test_partitions_separate_web_and_state(self):

@@ -146,3 +146,16 @@ python esp32/tests/project_validation_test.py
 ```
 
 Lancer cette commande depuis la racine du dépôt après une compilation PlatformIO pour disposer des en-têtes ArduinoJson. Le test vérifie le projet existant, les paramètres avec historique, les profils, les responsables, les essais et les notes, ainsi que le rejet des données invalides.
+
+## Recherche, preuves d’essai et ressources
+
+Le bandeau de bas de page et son ancien champ d’import JSON ont été retirés du HTML et du JavaScript. La restauration d’archive reste accessible dans l’onglet Sauvegarde, depuis son bouton dédié.
+
+- **Mes tâches** affiche les étapes dont le responsable correspond à l’identifiant du compte connecté. Les comptes portant le même nom restent distincts.
+- **Recherche** parcourt les étapes, problèmes, corrections et essais, sans tenir compte des accents ou des majuscules. Après connexion, « Actualiser les documents » inclut leurs noms et métadonnées. Le contenu interne des fichiers PDF n’est pas indexé.
+- **Photos et liens**, dans les essais, ajoute des photos PNG/JPG et associe les problèmes concernés. Limites : six photos par essai, 1 Mio par photo, dans le quota commun de 24 documents et 2,5 Mio. Les photos sont chargées via les routes authentifiées et incluses dans les archives. La restauration adapte les références aux nouveaux identifiants des documents. Si la sauvegarde du lien échoue après le transfert, le fichier demeure disponible dans Documents et le lien reste dans le brouillon de la page.
+- **Voir et corriger**, dans les problèmes, conserve le texte de la correction et affiche les essais associés. Le passage au statut Résolu reste une décision manuelle de l’équipe.
+- **Comparer les essais** présente deux configurations figées, leurs hypothèses, versions et observations, avec des écarts B moins A. Aucun résultat de simulation n’est recalculé.
+- **Espace ESP32** affiche les octets utilisés et disponibles des deux partitions, la taille du suivi JSON, le quota des documents et les ressources de fonctionnement. Les compteurs des partitions proviennent de `/api/status`. Le quota des documents exige une connexion.
+
+Aucune corbeille n’a été ajoutée. La suppression des documents conserve son fonctionnement existant.

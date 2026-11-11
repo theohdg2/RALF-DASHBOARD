@@ -45,3 +45,5 @@ Les hauteurs 20 / 10 / 5 cm sont provisoires. La couleur du troisième scotch re
 Le dossier [esp32](esp32/README.md) contient le firmware PlatformIO et le générateur du site local. Cette variante fonctionne sans Internet ni jeton GitHub, avec sauvegarde dans la mémoire de l’ESP32, comptes locaux par email, gestion admin et dépôt des rapports. Voir le guide pour le chargement USB, le Wi-Fi et la clé d’édition locale.
 
 La version ESP32 comprend aussi la connexion mémorisée, les responsables et échéances du planning, les profils associés aux essais, le journal du suivi, les notes par point de contrôle et une archive du suivi avec les documents. Voir [le guide ESP32](esp32/README.md).
+
+Les outils ESP32 proposent également Mes tâches, la recherche globale, les photos et problèmes liés aux essais, la comparaison de deux essais et les compteurs de stockage. Le bandeau inférieur et son ancien import ont été retirés.

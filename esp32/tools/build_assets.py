@@ -17,7 +17,7 @@ def build():
     # Header names and HTML IDs stay internal; visible labels use local storage terminology.
     app = app.replace('GitHub', 'ESP32')
     app = app.replace("${esc(t.version)}</small>", "${esc(t.version)} · ${esc(t.profileName||'Profil non nommé')} · ${esc(t.checkpoint||'Autre')}</small>")
-    app = app.replace('issues,reports})[v]()','issues,reports,documents,members,history:historyView,backup:backupView})[v]()')
+    app = app.replace('issues,reports})[v]()','issues,reports,documents,members,history:historyView,backup:backupView,mytasks:myTasks,search:searchView,compare:compareView,storage:storageView})[v]()')
     app = app.replace('function ensureEditor(){','function ensureEditor(){if(remote.user?.mustChangePassword){passwordModal(true);return false;}')
     app = app.replace('Sauvegardé sur ESP32 · visible pour l’équipe', 'Sauvegardé dans l’ESP32 · visible pour l’équipe')
     app = app.replace('Chaque sauvegarde ajoute un commit ESP32.', 'Les données persistent après un redémarrage. La dernière version valide est conservée en secours.')
@@ -27,13 +27,13 @@ def build():
     app = app.replace("toast(error.message==='CONFLICT'?", "toast(error.message==='PROJECT_TOO_LARGE'?'Le suivi dépasse 64 Kio. Exporte et archive des essais.':error.message==='CONFLICT'?")
     html = (ROOT/'index.html').read_text(encoding='utf-8')
     html = re.sub(r'(src|href)="(config.js|sync.js|app.js|style.css)(?:\?[^\"]*)?"', lambda m:f'{m[1]}="{m[2]}"', html)
-    html = html.replace('<script src="app.js">','<script src="members-ui.js"></script><script src="project-core.js"></script><script src="project-tools.js"></script><script src="app.js">')
+    html = html.replace('<script src="app.js">','<script src="members-ui.js"></script><script src="project-core.js"></script><script src="project-tools.js"></script><script src="project-extras.js"></script><script src="app.js">')
     html = html.replace('src="sync.js"','src="esp32-sync.js"').replace('Connexion GitHub','Connexion ESP32').replace('Chargement GitHub','Chargement ESP32').replace('Consultation publique','Hébergement local ESP32')
     css = (ROOT/'style.css').read_text(encoding='utf-8')
     css = re.sub(r"@import\s+url\([^)]*\)\s*;\s*", '', css)
     css += '\n'+(ESP/'web/members.css').read_text(encoding='utf-8')
     config = "window.RALF_REMOTE={owner:'RALF',repo:'ESP32',branch:'mémoire interne',path:'projet local'};\n"
-    assets = {'index.html':html,'app.js':app,'style.css':css,'config.js':config,'esp32-sync.js':(ESP/'web/esp32-sync.js').read_text(encoding='utf-8'),'members-ui.js':(ESP/'web/members-ui.js').read_text(encoding='utf-8'),'project-core.js':(ESP/'web/project-core.js').read_text(encoding='utf-8'),'project-tools.js':(ESP/'web/project-tools.js').read_text(encoding='utf-8')}
+    assets = {'index.html':html,'app.js':app,'style.css':css,'config.js':config,'esp32-sync.js':(ESP/'web/esp32-sync.js').read_text(encoding='utf-8'),'members-ui.js':(ESP/'web/members-ui.js').read_text(encoding='utf-8'),'project-core.js':(ESP/'web/project-core.js').read_text(encoding='utf-8'),'project-tools.js':(ESP/'web/project-tools.js').read_text(encoding='utf-8'),'project-extras.js':(ESP/'web/project-extras.js').read_text(encoding='utf-8')}
     output=ESP/'data';output.mkdir(exist_ok=True)
     for name,content in assets.items():
         (output/(name+'.gz')).write_bytes(gzip.compress(content.encode('utf-8'),mtime=0))
