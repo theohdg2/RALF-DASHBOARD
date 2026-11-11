@@ -36,6 +36,7 @@ def build():
     output=ESP/'data';output.mkdir(exist_ok=True)
     for name,content in assets.items():
         (output/(name+'.gz')).write_bytes(gzip.compress(content.encode('utf-8'),mtime=0))
+    (output/'logo-ralf.jpg').write_bytes((ROOT/'logo-ralf.jpg').read_bytes())
     (output/'seed.json').write_bytes((ROOT/'data/project.json').read_bytes())
     return assets
 
