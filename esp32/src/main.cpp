@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include "Accounts.h"
+#include "Documents.h"
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WebServer.h>
@@ -20,10 +22,12 @@
 fs::LittleFSFS stateFS;
 WebServer server(80);
 Preferences prefs;
+Accounts accounts(server);
+Documents documents(server,stateFS,accounts);
 constexpr size_t MAX_PROJECT_BYTES = 65536;
 constexpr uint32_t RECORD_MAGIC = 0x52414C46;
 struct RecordHeader { uint32_t magic, generation, length; uint8_t digest[32]; };
-String editorKey, apPassword, ssid, currentSha, activePath;
+String apPassword, ssid, currentSha, activePath;
 uint32_t currentGeneration = 0;
 bool ready = false;
 
@@ -49,12 +53,8 @@ void reply(int code, const char *error) {
   server.sendHeader("Cache-Control", "no-store");
   server.send(code, "application/json; charset=utf-8", body);
 }
-bool authorized() {
-  const String origin = server.header("Origin");
-  if (origin.length() && origin != "http://" + server.hostHeader()) { Serial.println("API 403: page origin does not match this ESP32."); reply(403, "ORIGIN"); return false; }
-  if (!constantEqual(server.header("Authorization"), "Bearer " + editorKey)) { Serial.println("API 401: editor key rejected."); reply(401, "AUTH"); return false; }
-  return true;
-}
+bool authorized() { return accounts.require() >= 0; }
+
 bool validString(JsonVariantConst value, size_t maxLength = 20000) {
   return value.is<const char *>() && strlen(value.as<const char *>()) <= maxLength;
 }
@@ -105,6 +105,7 @@ bool validProject(const String &body) {
   return true;
 }
 bool readRecord(const String &path, RecordHeader &header, String *payload = nullptr) {
+  if (!stateFS.exists(path)) return false;
   File file = stateFS.open(path, "r");
   if (!file || file.read((uint8_t *)&header, sizeof(header)) != sizeof(header) || header.magic != RECORD_MAGIC ||
       header.length == 0 || header.length > MAX_PROJECT_BYTES || file.size() != sizeof(header) + header.length) return false;
@@ -200,8 +201,7 @@ void setup() {
   Serial.begin(115200); delay(1500);
   WiFi.mode(WIFI_STA); // Initialize hardware RNG without starting an unconfigured AP.
   if (!prefs.begin("ralf-web", false)) { Serial.println("NVS unavailable. Startup stopped."); return; }
-  editorKey = prefs.getString("editor", ""); apPassword = prefs.getString("ap-pass", "");
-  if (!editorKey.length()) { editorKey = randomSecret(16); prefs.putString("editor", editorKey); }
+  apPassword = prefs.getString("ap-pass", "");
   if (!apPassword.length()) { apPassword = randomSecret(8); prefs.putString("ap-pass", apPassword); }
   ssid = "RALF-" + WiFi.macAddress().substring(12); ssid.replace(":", "");
   bool joined = false;
@@ -218,24 +218,31 @@ void setup() {
     WiFi.mode(WIFI_STA);
     Serial.printf("WiFi connected. URL: http://%s/\n",WiFi.localIP().toString().c_str());
   }
-  Serial.printf("Local editor key: %s\n",editorKey.c_str());
   Serial.printf("Flash: %u bytes; PSRAM: %u bytes\n",ESP.getFlashChipSize(),ESP.getPsramSize());
   if (MDNS.begin("ralf")) MDNS.addService("http", "tcp", 80);
   ready = initStorage();
+  if (ready) { if(!accounts.begin()) Serial.println("Accounts unavailable. Existing records have been preserved."); documents.begin(); }
   const char *headers[] = {"Authorization", "If-Match", "Origin"}; server.collectHeaders(headers,3);
   server.on("/api/project",HTTP_GET,getProject);
   server.on("/api/project",HTTP_PUT,putProject);
-  server.on("/api/session",HTTP_POST,[]{if (authorized()) { server.sendHeader("Cache-Control","no-store"); server.send(200,"application/json","{\"authenticated\":true}"); }});
+  accounts.routes();
+  documents.routes();
   server.on("/api/status",HTTP_GET,[]{JsonDocument d;d["storageReady"]=ready;d["generation"]=currentGeneration;d["maxProjectBytes"]=MAX_PROJECT_BYTES;d["freeHeap"]=ESP.getFreeHeap();d["psramBytes"]=ESP.getPsramSize();String body;serializeJson(d,body);server.sendHeader("Cache-Control","no-store");server.send(200,"application/json",body);});
   server.on("/",HTTP_GET,[]{asset("/index.html.gz","text/html; charset=utf-8");});
   server.on("/index.html",HTTP_GET,[]{asset("/index.html.gz","text/html; charset=utf-8");});
   server.on("/app.js",HTTP_GET,[]{asset("/app.js.gz","application/javascript; charset=utf-8");});
   server.on("/config.js",HTTP_GET,[]{asset("/config.js.gz","application/javascript; charset=utf-8");});
   server.on("/esp32-sync.js",HTTP_GET,[]{asset("/esp32-sync.js.gz","application/javascript; charset=utf-8");});
+  server.on("/members-ui.js",HTTP_GET,[]{asset("/members-ui.js.gz","application/javascript; charset=utf-8");});
   server.on("/style.css",HTTP_GET,[]{asset("/style.css.gz","text/css; charset=utf-8");});
   server.on("/favicon.ico",HTTP_GET,[]{server.send(204,"image/x-icon","");});
   server.onNotFound([]{Serial.printf("HTTP route missing: method=%d path=%s\n",(int)server.method(),server.uri().c_str());reply(404,"NOT_FOUND");});
   server.begin();
   Serial.println(ready ? "RALF dashboard ready." : "Storage unavailable. See messages above.");
 }
-void loop() { server.handleClient(); delay(2); }
+void loop() {
+ server.handleClient();
+ static String command;
+ while(Serial.available()){char c=Serial.read();if(c=='\n'||c=='\r'){if(command=="RESET_ADMIN")accounts.physicalAdminReset();command="";}else if(command.length()<64)command+=c;else command="";}
+ delay(2);
+}

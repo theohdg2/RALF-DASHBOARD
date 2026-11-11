@@ -1,30 +1,29 @@
-/* ESP32 local transport. Editor keys stay in memory and use same-origin API only. */
+/* Browser-native fetch is bound to its global context. Sessions remain in memory. */
 (function(root){
 'use strict';
 class Esp32Store {
- constructor(config={},request=fetch){this.config=config;this.request=request.bind(globalThis);this.sha=null;this.token='';}
+ constructor(config={},request=fetch){this.config=config;this.request=request.bind(globalThis);this.sha=null;this.token='';this.user=null;}
  setToken(token){this.token=token.trim();}
- async api(path,options={}){
-  if(!/^\/api\/[a-z]+$/.test(path))throw Error('INVALID_ENDPOINT');
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-  try{
-   const response=await this.request(path,{...options,cache:'no-store',credentials:'same-origin',signal:controller.signal,headers:{Accept:'application/json',...(this.token?{Authorization:`Bearer ${this.token}`}:{ }),...options.headers}});
-   if(!response.ok){const names={400:'INVALID_DATA',401:'AUTH',403:'ORIGIN',409:'CONFLICT',413:'PROJECT_TOO_LARGE',428:'REVISION_REQUIRED',503:'STORAGE_UNAVAILABLE',507:'STORAGE_WRITE_FAILED'};const error=Error(names[response.status]||`HTTP_${response.status}`);error.status=response.status;throw error;}
-   return await response.json();
+ async response(path,options={},timeout=45000){
+  if(!/^\/api\/[a-z]+(?:-[a-z]+)?(?:\?[^#]*)?$/.test(path))throw Error('INVALID_ENDPOINT');
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
+  try{const response=await this.request(path,{...options,cache:'no-store',credentials:'same-origin',signal:controller.signal,headers:{Accept:'application/json',...(this.token?{Authorization:`Bearer ${this.token}`}:{ }),...options.headers}});
+   if(!response.ok){let detail={};try{detail=await response.json()}catch{}const names={400:'INVALID_DATA',401:'LOGIN_REQUIRED',403:'FORBIDDEN',409:'CONFLICT',413:'PROJECT_TOO_LARGE',428:'REVISION_REQUIRED',429:'TRY_LATER',503:'STORAGE_UNAVAILABLE',507:'STORAGE_WRITE_FAILED'};const error=Error(typeof detail.error==='string'?detail.error:(names[response.status]||`HTTP_${response.status}`));error.status=response.status;if(response.status===401&&!['INVALID_CREDENTIALS','INVALID_CURRENT_PASSWORD'].includes(error.message)){this.token='';this.user=null;}throw error;}return response;
   }finally{clearTimeout(timer);}
  }
- async authenticate(){if(!this.token)throw Error('AUTH');const result=await this.api('/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(result.authenticated!==true)throw Error('INVALID_RESPONSE');return result;}
+ async api(path,options={}){return (await this.response(path,options)).json();}
+ async json(path,method,body){return this.api(path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+ acceptSession(result){if(!result||typeof result.token!=='string'||!/^[a-f0-9]{64}$/.test(result.token)||!result.user?.id)throw Error('INVALID_RESPONSE');this.token=result.token;this.user=result.user;return result.user;}
+ async login(email,password){return this.acceptSession(await this.json('/api/login','POST',{email,password}));}
+ async changePassword(currentPassword,newPassword){return this.acceptSession(await this.json('/api/password','POST',{currentPassword,newPassword}));}
+ async logout(){try{if(this.token)await this.json('/api/logout','POST',{})}finally{this.token='';this.user=null;}}
+ async refreshUser(){const result=await this.api('/api/me');this.user=result.user;return this.user;}
  async read(){const result=await this.api('/api/project');if(!result||typeof result.sha!=='string'||!/^[a-f0-9]{64}$/.test(result.sha)||!result.data)throw Error('INVALID_DATA');return result;}
  accept(result){this.sha=result.sha;return result.data;}
  async load(){return this.accept(await this.read());}
- async write(data){
-  if(!this.token)throw Error('AUTH');if(!this.sha)throw Error('NOT_LOADED');
-  const body=JSON.stringify(data);if(new TextEncoder().encode(body).length>65536)throw Error('PROJECT_TOO_LARGE');
-  const response=await this.api('/api/project',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':`"${this.sha}"`},body});
-  if(typeof response.sha!=='string'||!/^[a-f0-9]{64}$/.test(response.sha))throw Error('INVALID_RESPONSE');
-  this.sha=response.sha;return response.sha;
- }
+ async write(data){if(!this.token)throw Error('LOGIN_REQUIRED');if(!this.sha)throw Error('NOT_LOADED');const body=JSON.stringify(data);if(new TextEncoder().encode(body).length>65536)throw Error('PROJECT_TOO_LARGE');const response=await this.api('/api/project',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':`"${this.sha}"`},body});if(typeof response.sha!=='string'||!/^[a-f0-9]{64}$/.test(response.sha))throw Error('INVALID_RESPONSE');this.sha=response.sha;return response.sha;}
+ async uploadDocument(file,date,category){if(file.size>1024*1024)throw Error('DOCUMENT_TOO_LARGE');const query=new URLSearchParams({name:file.name,date,category});const form=new FormData();form.append('file',file,file.name);return (await this.response('/api/documents?'+query,{method:'POST',body:form},120000)).json();}
+ async downloadDocument(id){return (await this.response('/api/document?id='+encodeURIComponent(id),{},120000)).blob();}
 }
-root.RalfEsp32Store=Esp32Store;
-if(typeof module!=='undefined')module.exports=Esp32Store;
+root.RalfEsp32Store=Esp32Store;if(typeof module!=='undefined')module.exports=Esp32Store;
 })(typeof window!=='undefined'?window:globalThis);

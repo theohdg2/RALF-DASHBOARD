@@ -19,10 +19,15 @@ class AssetsTest(unittest.TestCase):
         self.assertNotIn('commit ESP32',self.assets['app.js'])
     def test_generated_javascript(self):
         import tempfile
-        for name in ['app.js','config.js','esp32-sync.js']:
+        for name in [name for name in self.assets if name.endswith('.js')]:
             with tempfile.TemporaryDirectory() as folder:
                 path=Path(folder)/name;path.write_text(self.assets[name],encoding='utf-8')
                 subprocess.run(['node','--check',str(path)],check=True,capture_output=True)
+    def test_member_module_loaded_before_app(self):
+        html=self.assets['index.html']
+        self.assertLess(html.index('src="members-ui.js"'),html.index('src="app.js"'))
+        self.assertIn('accountLoginModal()',self.assets['app.js'])
+        self.assertNotIn('remote.authenticate()',self.assets['app.js'])
     def test_gzip_roundtrip(self):
         for name,source in self.assets.items():self.assertEqual(gzip.decompress((ESP/'data'/(name+'.gz')).read_bytes()).decode(),source)
     def test_partitions_separate_web_and_state(self):
